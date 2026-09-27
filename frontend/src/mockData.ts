@@ -12,7 +12,7 @@ import type {
 
 export const sampleUser: User = {
   id: "u1",
-  name: "Rahul Sharma",
+  name: "Sample Participant",
   email: "u@gmail.com",
   role: "student",
   avatar: "https://i.pravatar.cc/150?u=rahul",

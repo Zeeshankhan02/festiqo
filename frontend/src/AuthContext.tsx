@@ -27,7 +27,7 @@ const demos: Account[] = [
     user: {
       ...sampleUser,
       id: "v1",
-      name: "Alex Morgan",
+      name: "Sample Volunteer",
       email: sampleVolunteer.email,
       role: "volunteer",
     },
@@ -83,9 +83,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() =>
     storage.read("FestiQO-user", null)
   );
-  const [accounts, setAccounts] = useState<Account[]>(() =>
-    storage.read("FestiQO-accounts", demos)
-  );
+  const [accounts, setAccounts] = useState<Account[]>(() => {
+    const saved = storage.read<Account[]>("FestiQO-accounts", demos);
+    const currentDemos = demos.map((demo) => {
+      const previous = saved.find(
+        (account) => account.user.id === demo.user.id
+      );
+      return { ...demo, active: previous?.active ?? demo.active };
+    });
+    return [
+      ...currentDemos,
+      ...saved.filter(
+        (account) => !demos.some((demo) => demo.user.id === account.user.id)
+      ),
+    ];
+  });
   const [volunteers, setVolunteers] = useState<Volunteer[]>(() =>
     storage.read("FestiQO-volunteers", [sampleVolunteer])
   );
