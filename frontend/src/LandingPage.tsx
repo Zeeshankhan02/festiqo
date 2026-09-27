@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { events } from "./mockData";
+import ThemeToggle from "./ThemeToggle";
 
 export default function LandingPage({
   dashboardPath,
@@ -35,6 +36,7 @@ export default function LandingPage({
           <a href="#experience">The experience</a>
           <a href="#about">About the fest</a>
         </nav>
+        <ThemeToggle compact />
         <Link to={enterPath} className="landing-signin">
           {dashboardPath ? "Go to dashboard" : "Sign in"}{" "}
           <ArrowRight size={16} />

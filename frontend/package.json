@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:scanner": "node --experimental-strip-types src/ticketValidation.test.ts"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",

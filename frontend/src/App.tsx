@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Link,
   Navigate,
@@ -52,6 +52,8 @@ import {
 } from "./mockData";
 import type { Event, Role, User } from "./types";
 import LandingPage from "./LandingPage";
+import ThemeToggle from "./ThemeToggle";
+import { getTicketScanStatus, type TicketScanStatus } from "./ticketValidation";
 
 type AppUser = User;
 const roleUsers: Record<Role, AppUser> = {
@@ -131,7 +133,7 @@ function App() {
             <div className="not-found">
               <ShieldCheck />
               <h1>That area is restricted</h1>
-              <p>Your account doesn’t have access to this workspace.</p>
+              <p>Your account doesnâ€™t have access to this workspace.</p>
               <Link to="/">
                 Go home <ArrowRight size={16} />
               </Link>
@@ -225,7 +227,7 @@ function Login({
             your mark.
           </p>
           <div className="login-date">
-            <CalendarDays size={17} /> OCT 15 — 17, 2026 <span /> YUKTI
+            <CalendarDays size={17} /> OCT 15 â€” 17, 2026 <span /> YUKTI
           </div>
         </div>
         <div className="promo-foot">
@@ -241,6 +243,9 @@ function Login({
         <div className="orb orb-two" />
       </div>
       <div className="login-main">
+        <div className="login-theme-toggle">
+          <ThemeToggle compact />
+        </div>
         <div className="mobile-brand brand">
           <span className="brand-mark">
             <Sparkles size={18} />
@@ -254,7 +259,7 @@ function Login({
             <br />
             energy is.
           </h2>
-          <p>Choose how you’d like to enter the platform.</p>
+          <p>Choose how youâ€™d like to enter the platform.</p>
           <div
             className="role-picker"
             role="group"
@@ -297,7 +302,7 @@ function Login({
             <ArrowRight size={17} />
           </button>
           <div className="login-terms">
-            Frontend demo · No password required
+            Frontend demo Â· No password required
           </div>
         </div>
         <div className="login-help">
@@ -341,7 +346,7 @@ function Workspace({
           </div>
           <div>
             <b>YUKTI</b>
-            <small>Annual Fest · 2026</small>
+            <small>Annual Fest Â· 2026</small>
           </div>
           <ChevronDown size={15} />
         </div>
@@ -413,6 +418,7 @@ function Workspace({
             FestiQO <span>/</span> <b>{title}</b>
           </div>
           <div className="top-actions">
+            <ThemeToggle compact />
             <button
               className="icon-button top-search"
               aria-label="Search"
@@ -450,7 +456,7 @@ function Workspace({
             <Search size={17} />
             <input
               autoFocus
-              placeholder="Search events, tickets, quizzes…"
+              placeholder="Search events, tickets, quizzesâ€¦"
               onKeyDown={(e) => {
                 if (e.key === "Escape") setSearchOpen(false);
               }}
@@ -609,7 +615,7 @@ function StudentDashboard({ toast }: { toast: (s: string) => void }) {
           </div>
           <div className="hero-meta">
             <span>
-              <CalendarDays size={15} /> OCT 15 — 17, 2026
+              <CalendarDays size={15} /> OCT 15 â€” 17, 2026
             </span>
             <span className="meta-divider" />
             <span>
@@ -620,7 +626,7 @@ function StudentDashboard({ toast }: { toast: (s: string) => void }) {
         <div className="hero-art">
           <div className="hero-photo" />
           <div className="hero-chip chip-top">
-            <span className="live-dot" /> 3 DAYS OF WHAT’S NEXT
+            <span className="live-dot" /> 3 DAYS OF WHATâ€™S NEXT
           </div>
           <div className="hero-sticker">
             <span>
@@ -634,7 +640,7 @@ function StudentDashboard({ toast }: { toast: (s: string) => void }) {
             <span className="chip-icon">
               <Music2 size={14} />
             </span>
-            TECH · MUSIC · CULTURE
+            TECH Â· MUSIC Â· CULTURE
           </div>
         </div>
       </section>
@@ -703,7 +709,7 @@ function StudentDashboard({ toast }: { toast: (s: string) => void }) {
             <div>
               <span className="category-tag">{sampleEvent.category}</span>
               <h3>{sampleEvent.title}</h3>
-              <p>Team ByteBusters · Registration confirmed</p>
+              <p>Team ByteBusters Â· Registration confirmed</p>
               <div className="next-details">
                 <span>
                   <CalendarDays size={14} /> Oct 15, 9:00 AM
@@ -730,8 +736,8 @@ function StudentDashboard({ toast }: { toast: (s: string) => void }) {
           </div>
           <h3>Quiz Results Out</h3>
           <p>
-            Results for Tech Trivia just landed. You’re sitting at <b>#4</b> on
-            the leaderboard.
+            Results for Tech Trivia just landed. Youâ€™re sitting at <b>#4</b>{" "}
+            on the leaderboard.
           </p>
           <span className="notice-time">
             <span className="notice-dot" /> 2 hours ago
@@ -794,7 +800,7 @@ function EventCard({ event }: { event: Event }) {
               month: "short",
               day: "numeric",
             })}{" "}
-            · {event.time}
+            Â· {event.time}
           </span>
           <span>
             <Compass size={14} />
@@ -834,7 +840,7 @@ function EventsPage({ toast }: { toast: (s: string) => void }) {
       <PageHead
         eyebrow="THE FULL LINEUP"
         title="Explore events"
-        description="Find the thing you’ll be talking about next week."
+        description="Find the thing youâ€™ll be talking about next week."
         action={
           <button
             className="btn btn-dark"
@@ -888,7 +894,7 @@ function EventDetail({ toast }: { toast: (s: string) => void }) {
   return (
     <>
       <Link to="/student/events" className="back-link">
-        ← All events
+        â† All events
       </Link>
       <div
         className="detail-hero"
@@ -931,7 +937,7 @@ function EventDetail({ toast }: { toast: (s: string) => void }) {
               day: "numeric",
               year: "numeric",
             })}{" "}
-            · {event.time}
+            Â· {event.time}
           </p>
           <p>
             <Compass />
@@ -943,11 +949,13 @@ function EventDetail({ toast }: { toast: (s: string) => void }) {
           </p>
           <button
             className="btn btn-dark btn-wide"
-            onClick={() => toast("You’re registered for " + event.title + "!")}
+            onClick={() =>
+              toast("Youâ€™re registered for " + event.title + "!")
+            }
           >
             Register for free <ArrowRight size={16} />
           </button>
-          <small>No payment required · Limited spots available</small>
+          <small>No payment required Â· Limited spots available</small>
         </aside>
       </div>
     </>
@@ -966,7 +974,7 @@ function TicketsPage({ toast }: { toast: (s: string) => void }) {
         <div className="ticket-card">
           <div className="ticket-main">
             <div className="ticket-head">
-              <span className="category-tag">TECHNICAL · TEAM EVENT</span>
+              <span className="category-tag">TECHNICAL Â· TEAM EVENT</span>
               <span className="status-badge">
                 <i /> CONFIRMED
               </span>
@@ -979,7 +987,7 @@ function TicketsPage({ toast }: { toast: (s: string) => void }) {
             <div className="ticket-details">
               <div>
                 <span>DATE & TIME</span>
-                <b>OCT 15, 2026 · 09:00 AM</b>
+                <b>OCT 15, 2026 Â· 09:00 AM</b>
               </div>
               <div>
                 <span>VENUE</span>
@@ -991,7 +999,7 @@ function TicketsPage({ toast }: { toast: (s: string) => void }) {
               </div>
               <div>
                 <span>TEAM</span>
-                <b>ByteBusters · 2 members</b>
+                <b>ByteBusters Â· 2 members</b>
               </div>
             </div>
           </div>
@@ -1053,7 +1061,7 @@ function QuizzesPage({ toast }: { toast: (s: string) => void }) {
   useEffect(() => {
     if (seconds === 0 && started) {
       setStarted(false);
-      toast("Quiz submitted · Your results are on their way!");
+      toast("Quiz submitted Â· Your results are on their way!");
     }
   }, [seconds, started, toast]);
   const question = sampleQuiz.questions[q];
@@ -1075,18 +1083,18 @@ function QuizzesPage({ toast }: { toast: (s: string) => void }) {
             <div className="quiz-big-icon">
               <CircleHelp size={33} />
             </div>
-            <span className="quiz-cover-note">01 / 03 · ROUND ONE</span>
+            <span className="quiz-cover-note">01 / 03 Â· ROUND ONE</span>
           </div>
-          <div className="quiz-spark">✳</div>
+          <div className="quiz-spark">âœ³</div>
         </div>
         <div className="quiz-content">
           <div className="quiz-meta">
             <span>GENERAL KNOWLEDGE</span>
-            <span>·</span>
+            <span>Â·</span>
             <span>
               <Clock3 size={13} /> 1 MIN
             </span>
-            <span>·</span>
+            <span>Â·</span>
             <span>10 QUESTIONS</span>
           </div>
           <h2>{sampleQuiz.title}</h2>
@@ -1144,7 +1152,7 @@ function QuizzesPage({ toast }: { toast: (s: string) => void }) {
                       setAnswer(null);
                     } else {
                       setStarted(false);
-                      toast("Quiz submitted · Your results are on their way!");
+                      toast("Quiz submitted Â· Your results are on their way!");
                     }
                   }}
                 >
@@ -1174,7 +1182,7 @@ function QuizzesPage({ toast }: { toast: (s: string) => void }) {
         <div>
           <span className="eyebrow">YOUR BEST SO FAR</span>
           <b>
-            Tech Trivia <span className="text-purple">·</span> 8 / 10
+            Tech Trivia <span className="text-purple">Â·</span> 8 / 10
           </b>
           <small>Completed Sep 19, 2026</small>
         </div>
@@ -1295,7 +1303,7 @@ function Podium({
     <div className={`podium-person place-${place}`}>
       <div className="podium-avatar">
         <img src={img} />
-        {place === 1 && <span>✦</span>}
+        {place === 1 && <span>âœ¦</span>}
       </div>
       <b>{user}</b>
       <small>{score} pts</small>
@@ -1312,15 +1320,15 @@ function VolunteerDashboard() {
       <div className="vol-banner">
         <div>
           <div className="eyebrow vol-eyebrow">
-            <i /> LIVE SHIFT · EAST ENTRY
+            <i /> LIVE SHIFT Â· EAST ENTRY
           </div>
           <h1>
-            You’re on the
+            Youâ€™re on the
             <br />
             <em>front line.</em>
           </h1>
           <p>
-            Doors open in 42 minutes. Let’s make every arrival feel like the
+            Doors open in 42 minutes. Letâ€™s make every arrival feel like the
             start of something.
           </p>
           <Link className="btn btn-white" to="/volunteer/scanner">
@@ -1363,10 +1371,10 @@ function VolunteerDashboard() {
           <div className="section-kicker">YOUR ASSIGNMENT</div>
           <h2>CodeSprint 2026</h2>
           <p>
-            <CalendarDays /> Today, Oct 15 · 08:00 AM – 02:30 PM
+            <CalendarDays /> Today, Oct 15 Â· 08:00 AM â€“ 02:30 PM
           </p>
           <p>
-            <Compass /> East Entry · Main Auditorium
+            <Compass /> East Entry Â· Main Auditorium
           </p>
           <div className="shift-progress">
             <span>ENTRY PROGRESS</span>
@@ -1437,9 +1445,33 @@ function ScanLogItem({
 
 function ScannerPage({ toast }: { toast: (s: string) => void }) {
   const [scanning, setScanning] = useState(false);
-  const [result, setResult] = useState("");
+  const [cameraError, setCameraError] = useState("");
+  const [result, setResult] = useState<{
+    ticketId: string;
+    status: TicketScanStatus;
+  } | null>(null);
+  const scannedTicketIds = useRef(new Set<string>());
+  const verifyTicket = (rawTicketId: string) => {
+    const ticketId = rawTicketId.trim().toUpperCase();
+    const status = getTicketScanStatus(
+      ticketId,
+      sampleRegistration.ticketId,
+      scannedTicketIds.current.has(ticketId)
+    );
+    if (status === "valid") scannedTicketIds.current.add(ticketId);
+    setResult({ ticketId, status });
+    setScanning(false);
+    toast(
+      status === "valid"
+        ? "Entry verified Â· Welcome to CodeSprint!"
+        : status === "duplicate"
+        ? "Entry blocked Â· This ticket was already scanned"
+        : "Entry blocked Â· Ticket not found"
+    );
+  };
   useEffect(() => {
     if (!scanning) return;
+    setCameraError("");
     let scanner: import("html5-qrcode").Html5Qrcode | undefined;
     let cancelled = false;
     void import("html5-qrcode")
@@ -1449,10 +1481,9 @@ function ScannerPage({ toast }: { toast: (s: string) => void }) {
         scanner = activeScanner;
         await activeScanner.start(
           { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 230, height: 230 } },
+          { fps: 10 },
           (decoded) => {
-            setResult(decoded);
-            setScanning(false);
+            verifyTicket(decoded);
             void activeScanner.stop().catch(() => {});
           },
           () => {}
@@ -1460,21 +1491,24 @@ function ScannerPage({ toast }: { toast: (s: string) => void }) {
         if (cancelled && activeScanner.isScanning) await activeScanner.stop();
       })
       .catch(() => {
-        if (!cancelled) setScanning(false);
+        if (!cancelled) {
+          setScanning(false);
+          setCameraError(
+            "Camera unavailable. Allow camera access or test a ticket below."
+          );
+        }
       });
     return () => {
       cancelled = true;
       if (scanner?.isScanning) void scanner.stop().catch(() => {});
     };
   }, [scanning]);
-  const handleScan = () => {
-    setResult(sampleRegistration.ticketId);
-    toast("Entry verified · Welcome to CodeSprint!");
-  };
+  const randomTicket = () =>
+    `TKT-2026-RANDOM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
   return (
     <>
       <PageHead
-        eyebrow="EAST ENTRY · CODE SPRINT"
+        eyebrow="EAST ENTRY Â· CODE SPRINT"
         title="Entry scanner"
         description="Scan a ticket QR to verify a guest. One scan, one smooth entry."
         action={
@@ -1494,15 +1528,16 @@ function ScannerPage({ toast }: { toast: (s: string) => void }) {
                 {scanning ? "Point the camera at a ticket QR" : "Camera view"}
               </span>
               <small>
-                {scanning
-                  ? "Hold steady · QR will scan automatically"
-                  : "Start the scanner or try a demo scan"}
+                {cameraError ||
+                  (scanning
+                    ? "Hold steady · QR will scan automatically"
+                    : "Start the scanner or test a ticket below")}
               </small>
             </div>
           </div>
           <div className="camera-bottom">
             <span>
-              <span className="live-dot" /> CAMERA · BACK
+              <span className="live-dot" /> CAMERA Â· BACK
             </span>
             <button className="icon-button" aria-label="Switch camera">
               <Settings size={16} />
@@ -1512,7 +1547,7 @@ function ScannerPage({ toast }: { toast: (s: string) => void }) {
             <button
               className="btn btn-dark btn-wide"
               onClick={() => {
-                setResult("");
+                setResult(null);
                 setScanning(!scanning);
               }}
             >
@@ -1527,34 +1562,68 @@ function ScannerPage({ toast }: { toast: (s: string) => void }) {
                 </>
               )}
             </button>
-            <button className="btn btn-outline btn-wide" onClick={handleScan}>
-              <QrCode size={16} /> Try demo scan
+            <button
+              className="btn btn-outline btn-wide"
+              onClick={() => verifyTicket(sampleRegistration.ticketId)}
+            >
+              <QrCode size={16} /> Try valid demo
+            </button>
+            <button
+              className="btn btn-outline btn-wide"
+              onClick={() => verifyTicket(randomTicket())}
+            >
+              <X size={16} /> Test random ticket
             </button>
           </div>
         </div>
         <div className="scan-result-panel">
           <span className="section-kicker">LATEST SCAN</span>
           {result ? (
-            <div className="scan-success">
-              <div className="result-check">
-                <Check size={23} />
+            <div className={`scan-success scan-${result.status}`}>
+              <div className={`result-check result-${result.status}`}>
+                {result.status === "valid" ? (
+                  <Check size={23} />
+                ) : (
+                  <X size={23} />
+                )}
               </div>
-              <span className="status-badge">
-                <i /> ENTRY VERIFIED
+              <span className={`status-badge scan-badge-${result.status}`}>
+                <i />{" "}
+                {result.status === "valid"
+                  ? "ENTRY VERIFIED"
+                  : result.status === "duplicate"
+                  ? "DUPLICATE TICKET"
+                  : "INVALID TICKET"}
               </span>
-              <h2>Rahul Sharma</h2>
-              <p>Team ByteBusters</p>
+              <h2>
+                {result.status === "valid"
+                  ? "Rahul Sharma"
+                  : result.status === "duplicate"
+                  ? "Already checked in"
+                  : "Ticket not found"}
+              </h2>
+              <p>
+                {result.status === "valid"
+                  ? "Team ByteBusters"
+                  : result.status === "duplicate"
+                  ? "This ticket has already been used."
+                  : "No registration matches this QR code."}
+              </p>
               <div className="result-ticket">
                 <span>TICKET ID</span>
-                <b>{result}</b>
+                <b>{result.ticketId}</b>
               </div>
-              <div className="entry-allowed">
-                <ShieldCheck size={17} /> Entry allowed <span>·</span> Valid
-                ticket
+              <div className={`entry-allowed entry-${result.status}`}>
+                <ShieldCheck size={17} />{" "}
+                {result.status === "valid"
+                  ? "Entry allowed · Valid ticket"
+                  : result.status === "duplicate"
+                  ? "Entry denied · Already scanned"
+                  : "Entry denied · Unregistered ticket"}
               </div>
               <button
                 className="btn btn-dark btn-wide"
-                onClick={() => setResult("")}
+                onClick={() => setResult(null)}
               >
                 Ready for next guest <ArrowRight size={15} />
               </button>
@@ -1589,7 +1658,7 @@ function ScanLogs() {
   return (
     <>
       <PageHead
-        eyebrow="EAST ENTRY · CODE SPRINT"
+        eyebrow="EAST ENTRY Â· CODE SPRINT"
         title="Scan history"
         description="Every check-in from your shift, all in one place."
         action={
@@ -1671,7 +1740,9 @@ function ScanLogs() {
         </div>
         <div className="table-foot">
           Showing 4 of 128 entries{" "}
-          <span>← Previous &nbsp;&nbsp; 1 &nbsp; 2 &nbsp; 3 &nbsp; Next →</span>
+          <span>
+            â† Previous &nbsp;&nbsp; 1 &nbsp; 2 &nbsp; 3 &nbsp; Next â†’
+          </span>
         </div>
       </div>
     </>
@@ -1684,12 +1755,12 @@ function AdminDashboard({ toast }: { toast: (s: string) => void }) {
       <div className="admin-welcome">
         <div>
           <div className="eyebrow">
-            SATURDAY, SEPTEMBER 26, 2026 · 19 DAYS TO GO
+            SATURDAY, SEPTEMBER 26, 2026 Â· 19 DAYS TO GO
           </div>
           <h1>
-            Good morning, Samira <span>✳</span>
+            Good morning, Samira <span>âœ³</span>
           </h1>
-          <p>The campus is warming up. Here’s how things are shaping up.</p>
+          <p>The campus is warming up. Hereâ€™s how things are shaping up.</p>
         </div>
         <button
           className="btn btn-dark"
@@ -1903,7 +1974,7 @@ function AdminEvents({ toast }: { toast: (s: string) => void }) {
             <span>
               <b>{e.title}</b>
               <small>
-                {e.category} · {e.date} · {e.venue}
+                {e.category} Â· {e.date} Â· {e.venue}
               </small>
             </span>
             <span className="admin-event-count">
@@ -1962,7 +2033,7 @@ function AdminEvents({ toast }: { toast: (s: string) => void }) {
                     ...list,
                   ]);
                 setModal(false);
-                toast(name ? `“${name}” created` : "Draft saved");
+                toast(name ? `â€œ${name}â€ created` : "Draft saved");
               }}
             >
               Save event <ArrowRight size={15} />
@@ -2224,7 +2295,7 @@ function QuizBuilder({ toast }: { toast: (s: string) => void }) {
             <div>
               <Users /> Open to all students
             </div>
-            <span className="draft-pill">DRAFT · NOT PUBLISHED</span>
+            <span className="draft-pill">DRAFT Â· NOT PUBLISHED</span>
           </div>
           <div className="builder-tip">
             <Sparkles />
@@ -2250,7 +2321,7 @@ function Announcement({ toast }: { toast: (s: string) => void }) {
       <PageHead
         eyebrow="KEEP EVERYONE IN THE LOOP"
         title="Announcements"
-        description="One clear message can make everyone’s day go smoother."
+        description="One clear message can make everyoneâ€™s day go smoother."
       />
       <div className="announce-layout">
         <div className="announce-form panel">
@@ -2320,7 +2391,7 @@ function Announcement({ toast }: { toast: (s: string) => void }) {
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="A quick heads-up…"
+              placeholder="A quick heads-upâ€¦"
               maxLength={60}
             />
             <small>{title.length} / 60</small>
@@ -2372,7 +2443,7 @@ function Announcement({ toast }: { toast: (s: string) => void }) {
           <div className="phone-preview">
             <div className="phone-top">
               <span>9:41</span>
-              <span>●●● ▰</span>
+              <span>â—â—â— â–°</span>
             </div>
             <div className="phone-notice">
               <div className="preview-icon">
@@ -2387,7 +2458,7 @@ function Announcement({ toast }: { toast: (s: string) => void }) {
                   "Your message will appear here, just as it will for students."}
               </p>
               <small className="audience-pill">
-                {audience} · {priority}
+                {audience} Â· {priority}
               </small>
             </div>
             <div className="phone-nav">
@@ -2397,7 +2468,7 @@ function Announcement({ toast }: { toast: (s: string) => void }) {
             </div>
           </div>
           <p className="preview-hint">
-            This is how it’ll look in the student notification center.
+            This is how itâ€™ll look in the student notification center.
           </p>
         </aside>
       </div>
@@ -2462,7 +2533,7 @@ function NotificationCenter() {
                   month: "short",
                   day: "numeric",
                 })}{" "}
-                · FestiQO
+                Â· FestiQO
               </small>
             </div>
             <button
@@ -2485,7 +2556,7 @@ function NotificationCenter() {
       {!items.length && (
         <Empty
           icon={<Bell />}
-          title="You’re all caught up"
+          title="Youâ€™re all caught up"
           text="New event updates and quiz results will show up here."
         />
       )}
