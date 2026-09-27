@@ -13,7 +13,7 @@ import type {
 export const sampleUser: User = {
   id: "u1",
   name: "Rahul Sharma",
-  email: "rahul@college.edu",
+  email: "u@gmail.com",
   role: "student",
   avatar: "https://i.pravatar.cc/150?u=rahul",
 };
@@ -44,7 +44,7 @@ export const sampleRegistration: Registration = {
 };
 export const sampleVolunteer: Volunteer = {
   id: "v1",
-  email: "alex@college.edu",
+  email: "v@gmail.com",
   status: "active",
   createdAt: "2026-09-12T09:00:00Z",
 };
@@ -66,7 +66,10 @@ export const soloRegistration: Registration = {
   members: [sampleUser.name],
   ticketId: "TKT-2026-E1-R2",
 };
-export const registrations: Registration[] = [sampleRegistration, soloRegistration];
+export const registrations: Registration[] = [
+  sampleRegistration,
+  soloRegistration,
+];
 export const sampleScan: Scan = {
   id: "v1",
   ticketId: "TKT-2026-E1-R1",

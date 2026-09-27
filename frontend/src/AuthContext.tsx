@@ -38,8 +38,8 @@ const demos: Account[] = [
     user: {
       ...sampleUser,
       id: "a1",
-      name: "Samira Patel",
-      email: "samira@college.edu",
+      name: "admin",
+      email: "admin@gmail.com",
       role: "admin",
     },
     password: "FestAdmin@26",
