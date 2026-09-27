@@ -1,11 +1,13 @@
 import type {
   Event,
+  CertificateTemplate,
   Notice,
   Quiz,
   Rank,
   Registration,
   Scan,
   User,
+  Volunteer,
 } from "./types";
 
 export const sampleUser: User = {
@@ -40,6 +42,31 @@ export const sampleRegistration: Registration = {
   status: "confirmed",
   ticketId: "TKT-2026-E1-R1",
 };
+export const sampleVolunteer: Volunteer = {
+  id: "v1",
+  email: "alex@college.edu",
+  status: "active",
+  createdAt: "2026-09-12T09:00:00Z",
+};
+export const sampleCertificateTemplate: CertificateTemplate = {
+  id: "cert-1",
+  title: "Certificate of Participation",
+  description: "For bringing your ideas and energy to the fest.",
+  eventId: "e1",
+  signatureName: "Samira Patel",
+  signatureRole: "Fest Coordinator",
+  status: "draft",
+  createdAt: "2026-09-20T10:00:00Z",
+  recipientCount: 0,
+};
+export const soloRegistration: Registration = {
+  ...sampleRegistration,
+  id: "r2",
+  teamName: null,
+  members: [sampleUser.name],
+  ticketId: "TKT-2026-E1-R2",
+};
+export const registrations: Registration[] = [sampleRegistration, soloRegistration];
 export const sampleScan: Scan = {
   id: "v1",
   ticketId: "TKT-2026-E1-R1",

@@ -23,6 +23,7 @@ import {
   Download,
   ExternalLink,
   Eye,
+  EyeOff,
   FileText,
   Flame,
   LayoutDashboard,
@@ -54,25 +55,10 @@ import type { Event, Role, User } from "./types";
 import LandingPage from "./LandingPage";
 import ThemeToggle from "./ThemeToggle";
 import { getTicketScanStatus, type TicketScanStatus } from "./ticketValidation";
+import { useAuth } from "./AuthContext";
+import { CertificatesPage, VolunteersPage } from "./AdminManagement";
 
 type AppUser = User;
-const roleUsers: Record<Role, AppUser> = {
-  student: sampleUser,
-  volunteer: {
-    ...sampleUser,
-    id: "v1",
-    name: "Alex Morgan",
-    role: "volunteer",
-    email: "alex@college.edu",
-  },
-  admin: {
-    ...sampleUser,
-    id: "a1",
-    name: "Samira Patel",
-    role: "admin",
-    email: "samira@college.edu",
-  },
-};
 const navByRole: Record<
   Role,
   { label: string; path: string; icon: typeof Compass }[]
@@ -95,30 +81,15 @@ const navByRole: Record<
     { label: "Events", path: "/admin/events", icon: CalendarDays },
     { label: "Participants", path: "/admin/participants", icon: Users },
     { label: "Quizzes", path: "/admin/quizzes", icon: CircleHelp },
+    { label: "Volunteers", path: "/admin/volunteers", icon: Users },
+    { label: "Certificates", path: "/admin/certificates", icon: FileText },
     { label: "Announcements", path: "/admin/notifications", icon: Bell },
   ],
 };
 
 function App() {
-  const [user, setUser] = useState<AppUser | null>(() => {
-    try {
-      return JSON.parse(
-        localStorage.getItem("FestiQO-user") || "null"
-      ) as AppUser | null;
-    } catch {
-      return null;
-    }
-  });
+  const { user, login, logout } = useAuth();
   const [notice, setNotice] = useState("");
-  const login = (role: Role) => {
-    const next = roleUsers[role];
-    setUser(next);
-    localStorage.setItem("FestiQO-user", JSON.stringify(next));
-  };
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("FestiQO-user");
-  };
   const toast = (message: string) => {
     setNotice(message);
     window.setTimeout(() => setNotice(""), 2600);
@@ -127,13 +98,14 @@ function App() {
     <>
       <Routes>
         <Route path="/login" element={<Login user={user} onLogin={login} />} />
+        <Route path="/signup" element={<SignupPage user={user} />} />
         <Route
           path="/unauthorized"
           element={
             <div className="not-found">
               <ShieldCheck />
               <h1>That area is restricted</h1>
-              <p>Your account doesnâ€™t have access to this workspace.</p>
+              <p>Your account doesn’t have access to this workspace.</p>
               <Link to="/">
                 Go home <ArrowRight size={16} />
               </Link>
@@ -197,10 +169,15 @@ function Login({
   onLogin,
 }: {
   user: AppUser | null;
-  onLogin: (role: Role) => void;
+  onLogin: (role: Role, email: string, password: string) => boolean;
 }) {
   const navigate = useNavigate();
   const [role, setRole] = useState<Role>("student");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
   useEffect(() => {
     if (user) navigate(`/${user.role}`);
   }, [user, navigate]);
@@ -227,7 +204,7 @@ function Login({
             your mark.
           </p>
           <div className="login-date">
-            <CalendarDays size={17} /> OCT 15 â€” 17, 2026 <span /> YUKTI
+            <CalendarDays size={17} /> OCT 15 — 17, 2026 <span /> YUKTI
           </div>
         </div>
         <div className="promo-foot">
@@ -252,14 +229,65 @@ function Login({
           </span>
           FestiQO
         </div>
-        <div className="login-form">
+        <form
+          className="login-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setError("");
+            setSubmitting(true);
+            window.setTimeout(() => {
+              const valid = onLogin(role, email, password);
+              if (!valid)
+                setError(
+                  "We couldn’t find an active account with those details and role."
+                );
+              setSubmitting(false);
+            }, 250);
+          }}
+        >
           <div className="eyebrow">WELCOME TO YOUR FEST</div>
           <h2>
             Pick up where the
             <br />
             energy is.
           </h2>
-          <p>Choose how youâ€™d like to enter the platform.</p>
+          <p>Choose how you’d like to enter the platform.</p>
+          <label className="auth-field">
+            Email
+            <input
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+              placeholder="you@college.edu"
+            />
+          </label>
+          <label className="auth-field">
+            Password
+            <span className="auth-password">
+              <input
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+                placeholder="Enter your password"
+              />
+              <button
+                type="button"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowPassword((value) => !value)}
+              >
+                {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+              </button>
+            </span>
+          </label>
+          {error && (
+            <p className="auth-error" role="alert">
+              {error}
+            </p>
+          )}
           <div
             className="role-picker"
             role="group"
@@ -268,6 +296,7 @@ function Login({
             {(["student", "volunteer", "admin"] as Role[]).map((item) => (
               <button
                 key={item}
+                type="button"
                 className={role === item ? "selected" : ""}
                 onClick={() => setRole(item)}
               >
@@ -282,29 +311,229 @@ function Login({
                 </span>
                 <span>
                   <b>{item[0].toUpperCase() + item.slice(1)}</b>
-                  <small>
-                    {item === "student"
-                      ? "Discover & join"
-                      : item === "volunteer"
-                      ? "Check in guests"
-                      : "Manage the fest"}
-                  </small>
                 </span>
-                <i className="radio-dot" />
               </button>
             ))}
           </div>
           <button
             className="btn btn-primary btn-wide"
-            onClick={() => onLogin(role)}
+            type="submit"
+            disabled={submitting}
           >
-            Continue as {role}
+            {submitting ? "Signing in…" : `Continue as ${role}`}
             <ArrowRight size={17} />
           </button>
-          <div className="login-terms">
-            Frontend demo Â· No password required
+          <div className="login-terms signup-prompt">
+            New to FestiQO? <Link to="/signup">Create a student account</Link>
           </div>
+        </form>
+        <div className="login-help">
+          <CircleHelp size={15} /> Need a hand?{" "}
+          <a href="mailto:hello@FestiQO.campus">Get in touch</a>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SignupPage({ user }: { user: AppUser | null }) {
+  const navigate = useNavigate();
+  const { signupStudent } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+  }>({});
+  const [success, setSuccess] = useState(false);
+  useEffect(() => {
+    if (user) navigate(`/${user.role}`);
+  }, [user, navigate]);
+  const submit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError("");
+    const next: typeof fieldErrors = {};
+    if (!email.trim()) next.email = "Enter your email address.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+      next.email = "Enter a valid email address.";
+    if (!password) next.password = "Enter a password.";
+    else if (password.length < 8) next.password = "Use at least 8 characters.";
+    if (!confirmPassword) next.confirmPassword = "Confirm your password.";
+    else if (password !== confirmPassword)
+      next.confirmPassword = "Passwords don’t match.";
+    setFieldErrors(next);
+    if (Object.keys(next).length) return;
+    setLoading(true);
+    window.setTimeout(() => {
+      try {
+        signupStudent(email, password);
+        setSuccess(true);
+      } catch (cause) {
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "We couldn’t create your account. Try again."
+        );
+      } finally {
+        setLoading(false);
+      }
+    }, 350);
+  };
+  return (
+    <div className="login-page">
+      <div className="login-side">
+        <div className="brand brand-light">
+          <span className="brand-mark">
+            <Sparkles size={18} />
+          </span>
+          FestiQO
+        </div>
+        <div className="login-promo">
+          <div className="eyebrow light-eyebrow">
+            <i /> STUDENTS, THIS ONE’S YOURS
+          </div>
+          <h1>
+            Find your
+            <br />
+            people <em>here.</em>
+          </h1>
+          <p>
+            Create your student account and keep every event, ticket, and fest
+            moment together.
+          </p>
+        </div>
+        <div className="promo-foot">YUKTI · OCTOBER 15—17, 2026</div>
+        <div className="orb orb-one" />
+        <div className="orb orb-two" />
+      </div>
+      <div className="login-main">
+        <div className="login-theme-toggle">
+          <ThemeToggle compact />
+        </div>
+        <Link to="/" className="mobile-brand brand">
+          <span className="brand-mark">
+            <Sparkles size={18} />
+          </span>
+          FestiQO
+        </Link>
+        {success ? (
+          <div className="login-form auth-success">
+            <span className="auth-success-mark">
+              <Check size={22} />
+            </span>
+            <div className="eyebrow">YOU’RE ON THE LIST</div>
+            <h2>
+              Your student account
+              <br />
+              is ready.
+            </h2>
+            <p>Sign in with the email and password you just created.</p>
+            <Link className="btn btn-primary btn-wide" to="/login">
+              Go to login <ArrowRight size={17} />
+            </Link>
+          </div>
+        ) : (
+          <form className="login-form signup-form" onSubmit={submit} noValidate>
+            <div className="eyebrow">JOIN THE FEST</div>
+            <h2>
+              Create your
+              <br />
+              student account.
+            </h2>
+            <p>Just the basics. The good stuff starts after.</p>
+            <label className="auth-field">
+              Email
+              <input
+                type="email"
+                autoComplete="email"
+                aria-invalid={!!fieldErrors.email}
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+                placeholder="you@college.edu"
+              />
+              {fieldErrors.email && (
+                <small className="auth-error">{fieldErrors.email}</small>
+              )}
+            </label>
+            <label className="auth-field">
+              Password
+              <span className="auth-password">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  aria-invalid={!!fieldErrors.password}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                  placeholder="At least 8 characters"
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((value) => !value)}
+                >
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </span>
+              {fieldErrors.password && (
+                <small className="auth-error">{fieldErrors.password}</small>
+              )}
+            </label>
+            <label className="auth-field">
+              Confirm password
+              <span className="auth-password">
+                <input
+                  type={showConfirm ? "text" : "password"}
+                  autoComplete="new-password"
+                  aria-invalid={!!fieldErrors.confirmPassword}
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  required
+                  placeholder="Enter your password again"
+                />
+                <button
+                  type="button"
+                  aria-label={
+                    showConfirm
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
+                  onClick={() => setShowConfirm((value) => !value)}
+                >
+                  {showConfirm ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </span>
+              {fieldErrors.confirmPassword && (
+                <small className="auth-error">
+                  {fieldErrors.confirmPassword}
+                </small>
+              )}
+            </label>
+            {error && (
+              <p className="auth-error" role="alert">
+                {error}
+              </p>
+            )}
+            <button
+              className="btn btn-primary btn-wide"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? "Creating account…" : "Create student account"}
+              <ArrowRight size={17} />
+            </button>
+            <p className="auth-switch">
+              Already have an account? <Link to="/login">Log in</Link>
+            </p>
+          </form>
+        )}
         <div className="login-help">
           <CircleHelp size={15} /> Need a hand?{" "}
           <a href="mailto:hello@FestiQO.campus">Get in touch</a>
@@ -346,7 +575,7 @@ function Workspace({
           </div>
           <div>
             <b>YUKTI</b>
-            <small>Annual Fest Â· 2026</small>
+            <small>Annual Fest · 2026</small>
           </div>
           <ChevronDown size={15} />
         </div>
@@ -456,7 +685,7 @@ function Workspace({
             <Search size={17} />
             <input
               autoFocus
-              placeholder="Search events, tickets, quizzesâ€¦"
+              placeholder="Search events, tickets, quizzes…"
               onKeyDown={(e) => {
                 if (e.key === "Escape") setSearchOpen(false);
               }}
@@ -499,6 +728,26 @@ function Workspace({
             <Route path="/scanner" element={<ScannerPage toast={toast} />} />
             <Route path="/logs" element={<ScanLogs />} />
             <Route path="/participants" element={<Participants />} />
+            <Route
+              path="/volunteers"
+              element={
+                user.role === "admin" ? (
+                  <VolunteersPage toast={toast} />
+                ) : (
+                  <Navigate to="/unauthorized" replace />
+                )
+              }
+            />
+            <Route
+              path="/certificates"
+              element={
+                user.role === "admin" ? (
+                  <CertificatesPage toast={toast} />
+                ) : (
+                  <Navigate to="/unauthorized" replace />
+                )
+              }
+            />
             <Route
               path="/notifications"
               element={
@@ -615,7 +864,7 @@ function StudentDashboard({ toast }: { toast: (s: string) => void }) {
           </div>
           <div className="hero-meta">
             <span>
-              <CalendarDays size={15} /> OCT 15 â€” 17, 2026
+              <CalendarDays size={15} /> OCT 15 — 17, 2026
             </span>
             <span className="meta-divider" />
             <span>
@@ -626,7 +875,7 @@ function StudentDashboard({ toast }: { toast: (s: string) => void }) {
         <div className="hero-art">
           <div className="hero-photo" />
           <div className="hero-chip chip-top">
-            <span className="live-dot" /> 3 DAYS OF WHATâ€™S NEXT
+            <span className="live-dot" /> 3 DAYS OF WHAT’S NEXT
           </div>
           <div className="hero-sticker">
             <span>
@@ -640,7 +889,7 @@ function StudentDashboard({ toast }: { toast: (s: string) => void }) {
             <span className="chip-icon">
               <Music2 size={14} />
             </span>
-            TECH Â· MUSIC Â· CULTURE
+            TECH · MUSIC · CULTURE
           </div>
         </div>
       </section>
@@ -709,7 +958,7 @@ function StudentDashboard({ toast }: { toast: (s: string) => void }) {
             <div>
               <span className="category-tag">{sampleEvent.category}</span>
               <h3>{sampleEvent.title}</h3>
-              <p>Team ByteBusters Â· Registration confirmed</p>
+              <p>Team ByteBusters · Registration confirmed</p>
               <div className="next-details">
                 <span>
                   <CalendarDays size={14} /> Oct 15, 9:00 AM
@@ -736,8 +985,8 @@ function StudentDashboard({ toast }: { toast: (s: string) => void }) {
           </div>
           <h3>Quiz Results Out</h3>
           <p>
-            Results for Tech Trivia just landed. Youâ€™re sitting at <b>#4</b>{" "}
-            on the leaderboard.
+            Results for Tech Trivia just landed. You’re sitting at <b>#4</b> on
+            the leaderboard.
           </p>
           <span className="notice-time">
             <span className="notice-dot" /> 2 hours ago
@@ -800,7 +1049,7 @@ function EventCard({ event }: { event: Event }) {
               month: "short",
               day: "numeric",
             })}{" "}
-            Â· {event.time}
+            · {event.time}
           </span>
           <span>
             <Compass size={14} />
@@ -840,7 +1089,7 @@ function EventsPage({ toast }: { toast: (s: string) => void }) {
       <PageHead
         eyebrow="THE FULL LINEUP"
         title="Explore events"
-        description="Find the thing youâ€™ll be talking about next week."
+        description="Find the thing you’ll be talking about next week."
         action={
           <button
             className="btn btn-dark"
@@ -894,7 +1143,7 @@ function EventDetail({ toast }: { toast: (s: string) => void }) {
   return (
     <>
       <Link to="/student/events" className="back-link">
-        â† All events
+        ← All events
       </Link>
       <div
         className="detail-hero"
@@ -937,7 +1186,7 @@ function EventDetail({ toast }: { toast: (s: string) => void }) {
               day: "numeric",
               year: "numeric",
             })}{" "}
-            Â· {event.time}
+            · {event.time}
           </p>
           <p>
             <Compass />
@@ -949,13 +1198,11 @@ function EventDetail({ toast }: { toast: (s: string) => void }) {
           </p>
           <button
             className="btn btn-dark btn-wide"
-            onClick={() =>
-              toast("Youâ€™re registered for " + event.title + "!")
-            }
+            onClick={() => toast("You’re registered for " + event.title + "!")}
           >
             Register for free <ArrowRight size={16} />
           </button>
-          <small>No payment required Â· Limited spots available</small>
+          <small>No payment required · Limited spots available</small>
         </aside>
       </div>
     </>
@@ -974,7 +1221,7 @@ function TicketsPage({ toast }: { toast: (s: string) => void }) {
         <div className="ticket-card">
           <div className="ticket-main">
             <div className="ticket-head">
-              <span className="category-tag">TECHNICAL Â· TEAM EVENT</span>
+              <span className="category-tag">TECHNICAL · TEAM EVENT</span>
               <span className="status-badge">
                 <i /> CONFIRMED
               </span>
@@ -987,7 +1234,7 @@ function TicketsPage({ toast }: { toast: (s: string) => void }) {
             <div className="ticket-details">
               <div>
                 <span>DATE & TIME</span>
-                <b>OCT 15, 2026 Â· 09:00 AM</b>
+                <b>OCT 15, 2026 · 09:00 AM</b>
               </div>
               <div>
                 <span>VENUE</span>
@@ -999,7 +1246,7 @@ function TicketsPage({ toast }: { toast: (s: string) => void }) {
               </div>
               <div>
                 <span>TEAM</span>
-                <b>ByteBusters Â· 2 members</b>
+                <b>ByteBusters · 2 members</b>
               </div>
             </div>
           </div>
@@ -1061,7 +1308,7 @@ function QuizzesPage({ toast }: { toast: (s: string) => void }) {
   useEffect(() => {
     if (seconds === 0 && started) {
       setStarted(false);
-      toast("Quiz submitted Â· Your results are on their way!");
+      toast("Quiz submitted · Your results are on their way!");
     }
   }, [seconds, started, toast]);
   const question = sampleQuiz.questions[q];
@@ -1083,18 +1330,18 @@ function QuizzesPage({ toast }: { toast: (s: string) => void }) {
             <div className="quiz-big-icon">
               <CircleHelp size={33} />
             </div>
-            <span className="quiz-cover-note">01 / 03 Â· ROUND ONE</span>
+            <span className="quiz-cover-note">01 / 03 · ROUND ONE</span>
           </div>
-          <div className="quiz-spark">âœ³</div>
+          <div className="quiz-spark">✳</div>
         </div>
         <div className="quiz-content">
           <div className="quiz-meta">
             <span>GENERAL KNOWLEDGE</span>
-            <span>Â·</span>
+            <span>·</span>
             <span>
               <Clock3 size={13} /> 1 MIN
             </span>
-            <span>Â·</span>
+            <span>·</span>
             <span>10 QUESTIONS</span>
           </div>
           <h2>{sampleQuiz.title}</h2>
@@ -1152,7 +1399,7 @@ function QuizzesPage({ toast }: { toast: (s: string) => void }) {
                       setAnswer(null);
                     } else {
                       setStarted(false);
-                      toast("Quiz submitted Â· Your results are on their way!");
+                      toast("Quiz submitted · Your results are on their way!");
                     }
                   }}
                 >
@@ -1182,7 +1429,7 @@ function QuizzesPage({ toast }: { toast: (s: string) => void }) {
         <div>
           <span className="eyebrow">YOUR BEST SO FAR</span>
           <b>
-            Tech Trivia <span className="text-purple">Â·</span> 8 / 10
+            Tech Trivia <span className="text-purple">·</span> 8 / 10
           </b>
           <small>Completed Sep 19, 2026</small>
         </div>
@@ -1303,7 +1550,7 @@ function Podium({
     <div className={`podium-person place-${place}`}>
       <div className="podium-avatar">
         <img src={img} />
-        {place === 1 && <span>âœ¦</span>}
+        {place === 1 && <span>✦</span>}
       </div>
       <b>{user}</b>
       <small>{score} pts</small>
@@ -1320,15 +1567,15 @@ function VolunteerDashboard() {
       <div className="vol-banner">
         <div>
           <div className="eyebrow vol-eyebrow">
-            <i /> LIVE SHIFT Â· EAST ENTRY
+            <i /> LIVE SHIFT · EAST ENTRY
           </div>
           <h1>
-            Youâ€™re on the
+            You’re on the
             <br />
             <em>front line.</em>
           </h1>
           <p>
-            Doors open in 42 minutes. Letâ€™s make every arrival feel like the
+            Doors open in 42 minutes. Let’s make every arrival feel like the
             start of something.
           </p>
           <Link className="btn btn-white" to="/volunteer/scanner">
@@ -1371,10 +1618,10 @@ function VolunteerDashboard() {
           <div className="section-kicker">YOUR ASSIGNMENT</div>
           <h2>CodeSprint 2026</h2>
           <p>
-            <CalendarDays /> Today, Oct 15 Â· 08:00 AM â€“ 02:30 PM
+            <CalendarDays /> Today, Oct 15 · 08:00 AM – 02:30 PM
           </p>
           <p>
-            <Compass /> East Entry Â· Main Auditorium
+            <Compass /> East Entry · Main Auditorium
           </p>
           <div className="shift-progress">
             <span>ENTRY PROGRESS</span>
@@ -1463,10 +1710,10 @@ function ScannerPage({ toast }: { toast: (s: string) => void }) {
     setScanning(false);
     toast(
       status === "valid"
-        ? "Entry verified Â· Welcome to CodeSprint!"
+        ? "Entry verified · Welcome to CodeSprint!"
         : status === "duplicate"
-        ? "Entry blocked Â· This ticket was already scanned"
-        : "Entry blocked Â· Ticket not found"
+        ? "Entry blocked · This ticket was already scanned"
+        : "Entry blocked · Ticket not found"
     );
   };
   useEffect(() => {
@@ -1508,7 +1755,7 @@ function ScannerPage({ toast }: { toast: (s: string) => void }) {
   return (
     <>
       <PageHead
-        eyebrow="EAST ENTRY Â· CODE SPRINT"
+        eyebrow="EAST ENTRY · CODE SPRINT"
         title="Entry scanner"
         description="Scan a ticket QR to verify a guest. One scan, one smooth entry."
         action={
@@ -1537,7 +1784,7 @@ function ScannerPage({ toast }: { toast: (s: string) => void }) {
           </div>
           <div className="camera-bottom">
             <span>
-              <span className="live-dot" /> CAMERA Â· BACK
+              <span className="live-dot" /> CAMERA · BACK
             </span>
             <button className="icon-button" aria-label="Switch camera">
               <Settings size={16} />
@@ -1658,7 +1905,7 @@ function ScanLogs() {
   return (
     <>
       <PageHead
-        eyebrow="EAST ENTRY Â· CODE SPRINT"
+        eyebrow="EAST ENTRY · CODE SPRINT"
         title="Scan history"
         description="Every check-in from your shift, all in one place."
         action={
@@ -1740,9 +1987,7 @@ function ScanLogs() {
         </div>
         <div className="table-foot">
           Showing 4 of 128 entries{" "}
-          <span>
-            â† Previous &nbsp;&nbsp; 1 &nbsp; 2 &nbsp; 3 &nbsp; Next â†’
-          </span>
+          <span>← Previous &nbsp;&nbsp; 1 &nbsp; 2 &nbsp; 3 &nbsp; Next →</span>
         </div>
       </div>
     </>
@@ -1755,12 +2000,12 @@ function AdminDashboard({ toast }: { toast: (s: string) => void }) {
       <div className="admin-welcome">
         <div>
           <div className="eyebrow">
-            SATURDAY, SEPTEMBER 26, 2026 Â· 19 DAYS TO GO
+            SATURDAY, SEPTEMBER 26, 2026 · 19 DAYS TO GO
           </div>
           <h1>
-            Good morning, Samira <span>âœ³</span>
+            Good morning, Samira <span>✳</span>
           </h1>
-          <p>The campus is warming up. Hereâ€™s how things are shaping up.</p>
+          <p>The campus is warming up. Here’s how things are shaping up.</p>
         </div>
         <button
           className="btn btn-dark"
@@ -1974,7 +2219,7 @@ function AdminEvents({ toast }: { toast: (s: string) => void }) {
             <span>
               <b>{e.title}</b>
               <small>
-                {e.category} Â· {e.date} Â· {e.venue}
+                {e.category} · {e.date} · {e.venue}
               </small>
             </span>
             <span className="admin-event-count">
@@ -2033,7 +2278,7 @@ function AdminEvents({ toast }: { toast: (s: string) => void }) {
                     ...list,
                   ]);
                 setModal(false);
-                toast(name ? `â€œ${name}â€ created` : "Draft saved");
+                toast(name ? `“${name}” created` : "Draft saved");
               }}
             >
               Save event <ArrowRight size={15} />
@@ -2165,14 +2410,19 @@ function QuizBuilder({ toast }: { toast: (s: string) => void }) {
       />
       <div className="builder-layout">
         <div className="builder-main">
-          <div className="builder-settings panel">
+          <div className="builder-settings panel bg-white text-zinc-900 border-zinc-200 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-800">
             <label>
               QUIZ TITLE
-              <input value={title} onChange={(e) => setTitle(e.target.value)} />
+              <input
+                className="bg-white text-zinc-900 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
             </label>
             <label>
               DURATION
               <select
+                className="bg-white text-zinc-900 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700"
                 value={duration}
                 onChange={(e) => setDuration(Number(e.target.value))}
               >
@@ -2182,11 +2432,11 @@ function QuizBuilder({ toast }: { toast: (s: string) => void }) {
               </select>
             </label>
           </div>
-          <div className="builder-question panel">
+          <div className="builder-question panel bg-white text-zinc-900 border-zinc-200 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-800">
             <div className="builder-question-head">
               <span>QUESTION 01</span>
               <button
-                className="icon-button"
+                className="icon-button dark:text-zinc-200 dark:hover:bg-zinc-800"
                 aria-label="Remove question"
                 onClick={() => toast("Keep at least one question in the quiz")}
               >
@@ -2196,6 +2446,7 @@ function QuizBuilder({ toast }: { toast: (s: string) => void }) {
             <label className="field-label">
               QUESTION TEXT
               <input
+                className="bg-white text-zinc-900 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700"
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="Write a question"
@@ -2207,7 +2458,9 @@ function QuizBuilder({ toast }: { toast: (s: string) => void }) {
             </div>
             {options.map((option, i) => (
               <div
-                className={`builder-option ${correct === i ? "correct" : ""}`}
+                className={`builder-option text-zinc-800 dark:text-zinc-200 dark:border-zinc-700 ${
+                  correct === i ? "correct" : ""
+                }`}
                 key={i}
               >
                 <button
@@ -2217,6 +2470,7 @@ function QuizBuilder({ toast }: { toast: (s: string) => void }) {
                 />
                 <input
                   value={option}
+                  className="bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
                   onChange={(e) =>
                     setOptions(
                       options.map((v, j) => (j === i ? e.target.value : v))
@@ -2231,10 +2485,14 @@ function QuizBuilder({ toast }: { toast: (s: string) => void }) {
               </div>
             ))}
             {extra.map((value, i) => (
-              <div className="builder-option" key={`extra-${i}`}>
+              <div
+                className="builder-option text-zinc-800 dark:text-zinc-200 dark:border-zinc-700"
+                key={`extra-${i}`}
+              >
                 <i className="radio-dot" />
                 <input
                   value={value}
+                  className="bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
                   onChange={(e) =>
                     setExtra(
                       extra.map((v, j) => (j === i ? e.target.value : v))
@@ -2243,7 +2501,7 @@ function QuizBuilder({ toast }: { toast: (s: string) => void }) {
                   placeholder={`Option ${options.length + i + 1}`}
                 />
                 <button
-                  className="icon-button"
+                  className="icon-button dark:text-zinc-200 dark:hover:bg-zinc-800"
                   aria-label="Remove option"
                   onClick={() => setExtra(extra.filter((_, j) => j !== i))}
                 >
@@ -2283,7 +2541,7 @@ function QuizBuilder({ toast }: { toast: (s: string) => void }) {
           </div>
         </div>
         <aside className="builder-aside">
-          <div className="builder-summary panel">
+          <div className="builder-summary panel bg-white text-zinc-900 border-zinc-200 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-800">
             <span className="section-kicker">QUIZ SUMMARY</span>
             <h3>{title || "Untitled quiz"}</h3>
             <div>
@@ -2295,9 +2553,9 @@ function QuizBuilder({ toast }: { toast: (s: string) => void }) {
             <div>
               <Users /> Open to all students
             </div>
-            <span className="draft-pill">DRAFT Â· NOT PUBLISHED</span>
+            <span className="draft-pill">DRAFT · NOT PUBLISHED</span>
           </div>
-          <div className="builder-tip">
+          <div className="builder-tip dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-800">
             <Sparkles />
             <b>Keep it snappy.</b>
             <p>
@@ -2321,7 +2579,7 @@ function Announcement({ toast }: { toast: (s: string) => void }) {
       <PageHead
         eyebrow="KEEP EVERYONE IN THE LOOP"
         title="Announcements"
-        description="One clear message can make everyoneâ€™s day go smoother."
+        description="One clear message can make everyone’s day go smoother."
       />
       <div className="announce-layout">
         <div className="announce-form panel">
@@ -2391,7 +2649,7 @@ function Announcement({ toast }: { toast: (s: string) => void }) {
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="A quick heads-upâ€¦"
+              placeholder="A quick heads-up…"
               maxLength={60}
             />
             <small>{title.length} / 60</small>
@@ -2443,7 +2701,7 @@ function Announcement({ toast }: { toast: (s: string) => void }) {
           <div className="phone-preview">
             <div className="phone-top">
               <span>9:41</span>
-              <span>â—â—â— â–°</span>
+              <span>●●● ▰</span>
             </div>
             <div className="phone-notice">
               <div className="preview-icon">
@@ -2458,7 +2716,7 @@ function Announcement({ toast }: { toast: (s: string) => void }) {
                   "Your message will appear here, just as it will for students."}
               </p>
               <small className="audience-pill">
-                {audience} Â· {priority}
+                {audience} · {priority}
               </small>
             </div>
             <div className="phone-nav">
@@ -2468,7 +2726,7 @@ function Announcement({ toast }: { toast: (s: string) => void }) {
             </div>
           </div>
           <p className="preview-hint">
-            This is how itâ€™ll look in the student notification center.
+            This is how it’ll look in the student notification center.
           </p>
         </aside>
       </div>
@@ -2533,7 +2791,7 @@ function NotificationCenter() {
                   month: "short",
                   day: "numeric",
                 })}{" "}
-                Â· FestiQO
+                · FestiQO
               </small>
             </div>
             <button
@@ -2556,7 +2814,7 @@ function NotificationCenter() {
       {!items.length && (
         <Empty
           icon={<Bell />}
-          title="Youâ€™re all caught up"
+          title="You’re all caught up"
           text="New event updates and quiz results will show up here."
         />
       )}

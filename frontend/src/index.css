@@ -5,13 +5,19 @@
 
 :root {
   font-family: "DM Sans", sans-serif;
-  color: #1c2130;
+  color: var(--text-primary);
   background: #f7f7f8;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --ink: #1c2130;
-  --muted: #858a98;
+  --ink: #252a35;
+  --muted: #6f7582;
+  --text-primary: #252a35;
+  --text-secondary: #6f7582;
+  --text-muted: #8a909d;
+  --text-link: #6749df;
+  --text-danger: #b44747;
+  --text-success: #16724f;
   --line: #e9e9ed;
   --purple: #7456ec;
   --deep: #171c28;
@@ -2934,19 +2940,24 @@ select:focus-visible {
   margin: 0 0 25px;
 }
 .role-picker {
+  margin-top: 18px;
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 .role-picker button {
-  height: 65px;
+  min-width: 0;
+  height: 66px;
   border: 1px solid #e9e8ed;
   border-radius: 9px;
   background: white;
-  padding: 0 12px;
+  padding: 7px 4px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  text-align: left;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  text-align: center;
   cursor: pointer;
   transition: 0.15s;
 }
@@ -2959,8 +2970,8 @@ select:focus-visible {
   box-shadow: 0 0 0 2px #7657ec0c;
 }
 .role-icon {
-  height: 33px;
-  width: 33px;
+  height: 29px;
+  width: 29px;
   border-radius: 8px;
   background: #f3f1fa;
   color: #7460c5;
@@ -2968,19 +2979,12 @@ select:focus-visible {
   place-items: center;
 }
 .role-picker button > span:nth-child(2) {
-  flex: 1;
-}
-.role-picker b,
-.role-picker small {
-  display: block;
+  min-width: 0;
 }
 .role-picker b {
+  display: block;
   font-size: 11px;
-}
-.role-picker small {
-  font-size: 9px;
-  color: #999ba5;
-  margin-top: 3px;
+  white-space: nowrap;
 }
 .login-form > .btn {
   margin-top: 18px;

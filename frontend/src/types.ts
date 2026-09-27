@@ -23,11 +23,36 @@ export type Registration = {
   id: string;
   eventId: string;
   userId: string;
-  teamName: string;
+  teamName?: string | null;
   members: string[];
   registeredAt: string;
   status: "confirmed" | "pending";
   ticketId: string;
+};
+export type Volunteer = {
+  id: string;
+  email: string;
+  status: "active" | "inactive";
+  createdAt: string;
+};
+export type CertificateTemplate = {
+  id: string;
+  title: string;
+  description: string;
+  eventId: string;
+  signatureName: string;
+  signatureRole: string;
+  status: "draft" | "published";
+  createdAt: string;
+  recipientCount: number;
+};
+export type Certificate = {
+  id: string;
+  templateId: string;
+  registrationId: string;
+  eventId: string;
+  recipientName: string;
+  publishedAt: string;
 };
 export type Scan = {
   id: string;
